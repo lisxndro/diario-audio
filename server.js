@@ -3,35 +3,33 @@ import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
 import cors from 'cors';
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 
 const app = express();
 app.use(cors());
 
 const upload = multer({ dest: 'uploads/' });
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 app.post('/upload-audio', upload.single('audio'), async (req, res) => {
   try {
     const filePath = req.file.path;
 
-    const transcription = await openai.createTranscription(
-      fs.createReadStream(filePath),
-      'whisper-1'
-    );
+    const transcription = await openai.audio.transcriptions.create({
+      file: fs.createReadStream(filePath),
+      model: 'whisper-1',
+    });
 
     const data = {
-      transcription: transcription.data.text,
+      transcription: transcription.text,
       audioFile: req.file.filename,
       originalName: req.file.originalname,
       date: new Date().toISOString(),
     };
 
-    // Guarda en un archivo JSON
     const logDir = path.join('transcriptions');
     if (!fs.existsSync(logDir)) fs.mkdirSync(logDir);
 
