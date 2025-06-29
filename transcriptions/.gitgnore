@@ -1,0 +1,4 @@
+node_modules
+uploads
+transcriptions/log.json
+.env
